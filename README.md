@@ -12,13 +12,6 @@ data
 │   ├── movies
 │   ├── music
 │   └── tv
-├── usenet
-│   ├── incomplete
-│   └── complete
-│        ├── books
-│        ├── movies
-│        ├── music
-│        └── tv
 └── media
      ├── books
      ├── movies
