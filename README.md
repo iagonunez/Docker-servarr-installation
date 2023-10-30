@@ -1,6 +1,6 @@
 # Arr programs install for Linux using Docker
 
-This script and docker-compose file help install Sonarr, Radarr, Lidarr, Prowlarr along with qbitorrent, a vpn through gluetun and a navidrome server for music.
+This script and docker-compose file help install Sonarr, Radarr, Lidarr, Prowlarr to download Linux ISOs along with qbitorrent, a vpn through gluetun and a navidrome server for music streaming.
 
 ### Setup:
 The folder structure is very important for proper operation between programs. The following structure will be created on the root folder.
@@ -45,3 +45,6 @@ For the setup of each program follow [Servarr wiki](https://wiki.servarr.com).
 
 ## Installation
 To install the programs give execution permissions to install.sh with ```chmod +x install.sh``` and run wiht ```sudo ./install.sh```.
+
+
+This code is for educational purposes only and I'm not responsible for any unlawful use of the programs.
