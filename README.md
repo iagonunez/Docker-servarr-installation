@@ -1,4 +1,4 @@
-# Arr programs install for Linux using Docker
+# Servarr programs installation for Linux using Docker
 
 This script and docker-compose file help install Sonarr, Radarr, Lidarr, Prowlarr to download Linux ISOs along with qbitorrent, a vpn through gluetun and a navidrome server for music streaming.
 
