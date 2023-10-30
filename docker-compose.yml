@@ -1,0 +1,156 @@
+version: "3"
+services:
+  vpn:
+    image: qmcgaw/gluetun:v3
+    container_name: vpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      - 8090:8090 # qbittorrent Web UI
+      - 6881:6881 # qbittorrent
+      - 6881:6881/udp # qbittorrent
+      - 8389:8389/udp # Gluetun-Shadowsocks?
+      - 8389:8389/tcp # Gluetun-Shadowsocks?
+      - 8889:8889/tcp # Gluetun
+    volumes:
+      - /data/docker/gluetun:/gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - OPENVPN_USER=user
+      - OPENVPN_PASSWORD=pswd
+      - SERVER_COUNTRIES=country
+      # Timezone for accurate log times
+      - TZ=Europe/Madrid
+    restart: unless-stopped
+
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - UMASK=022
+      - WEBUI_PORT=8090
+    volumes:
+      - /data/docker/qbittorrent/config:/config
+      - /data/torrents:/data/torrents
+    network_mode: service:vpn
+    labels:
+      - autoheal=true
+    healthcheck:
+      test: curl google.com || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+
+  prowlarr:
+    image: hotio/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /data/docker/prowlarr:/config
+    ports:
+      - 9696:9696 # prowlarr
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+
+  jackett:
+    image: linuxserver/jackett:latest
+    container_name: vpn-jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /data/docker/jackett/config:/config
+    ports:
+      - 9117:9117 # jackett
+    labels:
+      - autoheal=true
+      - com.centurylinklabs.watchtower.depends-on=vpn
+    healthcheck:
+      test: curl google.com || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /data/docker/sonarr/config:/config
+      - /data:/data
+    ports:
+      - 8989:8989 # sonarr
+    restart: unless-stopped
+    depends_on:
+      - jackett
+      - qbittorrent
+
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /data/docker/radarr3/config:/config
+      - /data:/data
+    ports:
+      - 7878:7878 # radarr
+    restart: unless-stopped
+    depends_on:
+      - jackett
+      - qbittorrent
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /data/docker/lidarr/config:/config
+      - /data:/data
+    ports:
+      - 8686:8686 # lidarr
+    restart: unless-stopped
+    depends_on:
+      - jackett
+      - qbittorrent
+
+  navidrome:
+    image: deluan/navidrome:latest
+    ports:
+      - "4533:4533"
+    environment:
+      # Optional: put your config options customization here. Examples:
+      ND_SCANSCHEDULE: 1h
+      ND_LOGLEVEL: info 
+    volumes:
+      - "/data/docker/navidrome:/data"
+      - "/data/media/music:/music:ro"
